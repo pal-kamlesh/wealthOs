@@ -9,7 +9,7 @@ import {
 //   deleteFeedback,
 //   fetchFeedback,
   getAllUsers,
-} from "../controllers/userController.js";
+} from "../controllers/userControllers.js";
 import { ifAdmin, verifyToken } from "../middleware/verifyUser.js";
 
 const router = Router();
@@ -22,6 +22,6 @@ router.post("/logout", logout);
 // router.put("/feedback", verifyToken, editFeedbacks);
 // router.delete("/feedback", verifyToken, deleteFeedback);
 // router.post("/adminFeedback", verifyToken, ifAdmin, fetchFeedback);
-// router.get("/allUsers", verifyToken, ifAdmin, getAllUsers);
+router.get("/allUsers", verifyToken, ifAdmin, getAllUsers);
 
 export default router;

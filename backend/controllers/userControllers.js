@@ -1,6 +1,6 @@
 import { createToken } from "../middleware/verifyUser.js";
 import { errorHandler } from "../utils/error.js";
-import User from "../model/User.js";
+import User from "../models/User.js";
 // import Feedback from "../model/Feedback.js";
 
 const login = async (req, res, next) => {

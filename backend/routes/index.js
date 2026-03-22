@@ -6,3 +6,6 @@ const router = Router();
 router.use("/user", userRoute);
 
 export default router;
+const expenseRoutes = require("./routes/expenseRoutes");
+
+app.use("/api/expenses", expenseRoutes);

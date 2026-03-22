@@ -50,3 +50,6 @@ app.use(errorMiddleware);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server running at port: ${port}`));
+const authRoutes = require("./routes/authRoutes");
+
+app.use("/api/auth", authRoutes);

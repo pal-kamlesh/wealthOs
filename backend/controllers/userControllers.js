@@ -1,7 +1,6 @@
 import { createToken } from "../middleware/verifyUser.js";
 import { errorHandler } from "../utils/error.js";
 import User from "../models/User.js";
-// import Feedback from "../model/Feedback.js";
 
 const login = async (req, res, next) => {
   const { username, password } = req.body;
@@ -67,66 +66,6 @@ const register = async (req, res, next) => {
   }
 };
 
-// const feedback = async (req, res, next) => {
-//   try {
-//     console.log(req.body);
-//     console.log(req.user);
-//     const { NewFeedback: feedback } = req.body;
-//     if (!feedback) {
-//       return next(errorHandler(400, "feedback field is empty"));
-//     }
-//     const newFeedback = await Feedback.create({
-//       feedback,
-//       user: req.user.id,
-//     });
-//     res.status(200).json({ message: "feedback taken", result: newFeedback });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-// const getFeedbacks = async (req, res, next) => {
-//   try {
-//     const allFeedbacksOfUser = await Feedback.find({ user: req.user.id });
-//     res.status(200).json({ result: allFeedbacksOfUser });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// const editFeedbacks = async (req, res, next) => {
-//   try {
-//     console.log(req.body);
-//     const { NewFeedback, id } = req.body;
-//     if (!NewFeedback) {
-//       return res.status(400).json({ message: "New feedback is required" });
-//     }
-//     const oldFeedback = await Feedback.findById(id).populate("user");
-//     if (!oldFeedback) {
-//       return res.status(404).json({ message: "Feedback not found" });
-//     }
-//     oldFeedback.feedback = NewFeedback;
-//     await oldFeedback.save();
-//     res.status(200).json({ message: "Feedback edited", result: oldFeedback });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// const deleteFeedback = async (req, res, next) => {
-//   try {
-//     const { id } = req.body;
-//     const deletedFeedback = await Feedback.findByIdAndDelete(id);
-//     if (!deletedFeedback) {
-//       return res.status(404).json({ message: "Feedback not found" });
-//     }
-//     res
-//       .status(200)
-//       .json({ message: "Feedback deleted", result: deletedFeedback });
-//   } catch (error) {
-//     console.error(error);
-//     next(error);
-//   }
-// };
 
 const getAllUsers = async (req, res, next) => {
   try {
@@ -138,26 +77,11 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
-// const fetchFeedback = async (req, res, next) => {
-//   try {
-//     const { userId } = req.body;
-//     const query = userId ? { user: userId } : {};
-//     const feedbacks = await Feedback.find(query).populate("user").limit(50);
 
-//     res.status(200).json({ message: "Fetched feedbacks", result: feedbacks });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
 
 export {
   login,
   logout,
   register,
-//   feedback,
-//   getFeedbacks,
-//   editFeedbacks,
-//   deleteFeedback,
-//   fetchFeedback,
   getAllUsers,
 };

@@ -6,16 +6,16 @@ import connectDB from "./config/mongoose.js";
 import errorMiddleware from "./middleware/errorMiddleware.js";
 import morgan from "morgan";
 import { fileURLToPath } from "url";
-import rootRouter from "./routes/index.js"
+import rootRouter from "./routes/index.js";
 
 connectDB();
 
 const app = express();
 
-//Root Middleware
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
+
 app.use(
   morgan(function (tokens, req, res) {
     return [

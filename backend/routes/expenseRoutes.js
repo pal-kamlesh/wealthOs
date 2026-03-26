@@ -1,19 +1,17 @@
-const express = require("express");
-const router = express.Router();
-
-const {
+import express from "express";
+import {
   getExpenses,
   addExpense,
   updateExpense,
   deleteExpense,
-} = require("../controllers/expenseController");
+} from "../controllers/expenseController.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
-const auth = require("../middleware/authMiddleware");
+const router = express.Router();
 
-// Protected routes
-router.get("/", auth, getExpenses);
-router.post("/", auth, addExpense);
-router.put("/:id", auth, updateExpense);
-router.delete("/:id", auth, deleteExpense);
+router.get("/", authMiddleware, getExpenses);
+router.post("/", authMiddleware, addExpense);
+router.put("/:id", authMiddleware, updateExpense);
+router.delete("/:id", authMiddleware, deleteExpense);
 
-module.exports = router;
+export default router;

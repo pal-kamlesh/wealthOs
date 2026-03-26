@@ -1,55 +1,36 @@
-import express from "express";
-import cors from "cors";
-import path from "path";
-import cookieParser from "cookie-parser";
-import connectDB from "./config/mongoose.js";
-import errorMiddleware from "./middleware/errorMiddleware.js";
-import morgan from "morgan";
+import dotenv from "dotenv";
 import { fileURLToPath } from "url";
-import rootRouter from "./routes/index.js";
+import { dirname, join } from "path";
 
-connectDB();
+// ✅ This forces dotenv to find .env correctly on Windows
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: join(__dirname, ".env") });
+
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import authRoutes from "./routes/authRoutes.js";
+import expenseRoutes from "./routes/expenseRoutes.js";
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
-app.use(cookieParser());
-
-app.use(
-  morgan(function (tokens, req, res) {
-    return [
-      tokens.method(req, res),
-      tokens.url(req, res),
-      tokens.status(req, res),
-      tokens.res(req, res, "content-length"),
-      "-",
-      tokens["response-time"](req, res),
-      "ms",
-    ].join(" ");
-  })
-);
-
-app.use("/api/v1", rootRouter);
-
-if (process.env.NODE_ENV === "production") {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  app.use(express.static(path.join(__dirname, "/client/dist")));
-  app.get("*", (req, res) =>
-    res.sendFile(path.resolve(__dirname, "client", "dist", "index.html"))
-  );
-} else {
-  app.get("/", (req, res) => {
-    res.send("API is running....");
-  });
-}
-
-//Error handling middleware
-app.use(errorMiddleware);
-
-const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`Server running at port: ${port}`));
-const authRoutes = require("./routes/authRoutes");
 
 app.use("/api/auth", authRoutes);
+app.use("/api/expenses", expenseRoutes);
+
+app.get("/", (req, res) => res.send("✅ WealthOs API running"));
+
+console.log("MONGO_URI:", process.env.MONGO_URI); // ← debug line
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB connected");
+    app.listen(process.env.PORT || 5000, () =>
+      console.log(`✅ Server running on port ${process.env.PORT || 5000}`)
+    );
+  })
+  .catch((err) => console.error("❌ MongoDB error:", err));

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -13,6 +13,14 @@ import {
   Cell,
   CartesianGrid,
 } from "recharts";
+import useExpenseStore from "../store/useExpenceStore";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  createExpense,
+  getExpenses,
+  updateExpense as updateExpenseApi,
+  deleteExpense as deleteExpenseApi,
+} from "../lib/api";
 
 // ─── Seed Data ────────────────────────────────────────────────────────────────
 const today = new Date();
@@ -33,149 +41,6 @@ const CATEGORIES = [
   { label: "Upskilling", icon: "💻", color: "#3b82f6", budget: 1000 },
   { label: "Utilities", icon: "⚡", color: "#14b8a6", budget: 500 },
   { label: "Other", icon: "📦", color: "#94a3b8", budget: 500 },
-];
-
-const SEED_EXPENSES = [
-  {
-    id: 1,
-    date: daysAgo(0),
-    category: "Food & Dining",
-    amount: 120,
-    note: "Lunch at cafe",
-  },
-  {
-    id: 2,
-    date: daysAgo(0),
-    category: "Transport",
-    amount: 40,
-    note: "Auto to office",
-  },
-  {
-    id: 3,
-    date: daysAgo(1),
-    category: "Food & Dining",
-    amount: 250,
-    note: "Dinner + drinks",
-  },
-  {
-    id: 4,
-    date: daysAgo(1),
-    category: "Shopping",
-    amount: 499,
-    note: "T-shirt",
-  },
-  {
-    id: 5,
-    date: daysAgo(2),
-    category: "Entertainment",
-    amount: 299,
-    note: "Netflix subscription",
-  },
-  {
-    id: 6,
-    date: daysAgo(2),
-    category: "Food & Dining",
-    amount: 85,
-    note: "Breakfast",
-  },
-  {
-    id: 7,
-    date: daysAgo(3),
-    category: "Upskilling",
-    amount: 499,
-    note: "Udemy course",
-  },
-  {
-    id: 8,
-    date: daysAgo(3),
-    category: "Transport",
-    amount: 200,
-    note: "Ola cab",
-  },
-  {
-    id: 9,
-    date: daysAgo(4),
-    category: "Health",
-    amount: 350,
-    note: "Pharmacy",
-  },
-  {
-    id: 10,
-    date: daysAgo(4),
-    category: "Food & Dining",
-    amount: 180,
-    note: "Zomato order",
-  },
-  {
-    id: 11,
-    date: daysAgo(5),
-    category: "Utilities",
-    amount: 149,
-    note: "Hotstar",
-  },
-  {
-    id: 12,
-    date: daysAgo(5),
-    category: "Food & Dining",
-    amount: 95,
-    note: "Tea + snacks",
-  },
-  {
-    id: 13,
-    date: daysAgo(6),
-    category: "Shopping",
-    amount: 1200,
-    note: "Shoes",
-  },
-  {
-    id: 14,
-    date: daysAgo(7),
-    category: "Food & Dining",
-    amount: 320,
-    note: "Restaurant",
-  },
-  {
-    id: 15,
-    date: daysAgo(8),
-    category: "Transport",
-    amount: 80,
-    note: "Metro weekly pass",
-  },
-  {
-    id: 16,
-    date: daysAgo(9),
-    category: "Entertainment",
-    amount: 450,
-    note: "Movie tickets",
-  },
-  {
-    id: 17,
-    date: daysAgo(10),
-    category: "Food & Dining",
-    amount: 140,
-    note: "Lunch",
-  },
-  {
-    id: 18,
-    date: daysAgo(12),
-    category: "Upskilling",
-    amount: 299,
-    note: "Books",
-  },
-  {
-    id: 19,
-    date: daysAgo(14),
-    category: "Health",
-    amount: 200,
-    note: "Gym session",
-  },
-  {
-    id: 20,
-    date: daysAgo(15),
-    category: "Food & Dining",
-    amount: 560,
-    note: "Team lunch",
-  },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -206,8 +71,8 @@ const MONTHLY_BUDGET = CATEGORIES.reduce((s, c) => s + c.budget, 0);
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function FinanceApp() {
+  // ── UI state (local only) ──
   const [tab, setTab] = useState("tracker");
-  const [expenses, setExpenses] = useState(SEED_EXPENSES);
   const [view, setView] = useState("weekly");
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -218,8 +83,62 @@ export default function FinanceApp() {
     amount: "",
     note: "",
   });
-  const [nextId, setNextId] = useState(100);
 
+  // ── Zustand store ──
+  const expenses = useExpenseStore((s) => s.expenses);
+  const setExpenses = useExpenseStore((s) => s.setExpenses);
+  const updateExpense = useExpenseStore((s) => s.updateExpense);
+  const deleteExpense = useExpenseStore((s) => s.deleteExpense);
+  const addExpense = useExpenseStore((s) => s.addExpense);
+
+  // ── React Query ──
+  const qc = useQueryClient();
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["expenses"],
+    queryFn: getExpenses,
+  });
+
+  // Sync server data → Zustand when fetch resolves
+  useEffect(() => {
+    if (data?.result) {
+      setExpenses(data.result);
+    }
+  }, [data]);
+
+  const addMutation = useMutation({
+    mutationFn: createExpense,
+    onSuccess: (res) => {
+      console.log("Created expense:", res);
+      // Optimistically already shown; now replace temp with real _id from server
+      qc.invalidateQueries({ queryKey: ["expenses"] });
+    },
+    onError: () => {
+      alert("Failed to save expense. Please try again.");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...body }) => updateExpenseApi(id, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["expenses"] });
+    },
+    onError: () => {
+      alert("Failed to update expense. Please try again.");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteExpenseApi,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["expenses"] });
+    },
+    onError: () => {
+      alert("Failed to delete expense. Please try again.");
+    },
+  });
+
+  // ── Derived / memoised values ──
   const windowStart = useMemo(() => {
     if (view === "daily") return fmt(today);
     if (view === "weekly") return fmt(startOf("week"));
@@ -285,22 +204,8 @@ export default function FinanceApp() {
     });
   }, [expenses]);
 
-  function saveExpense() {
-    if (!form.amount || !form.date) return;
-    if (editItem) {
-      setExpenses((prev) =>
-        prev.map((e) =>
-          e.id === editItem.id ? { ...e, ...form, amount: +form.amount } : e,
-        ),
-      );
-      setEditItem(null);
-    } else {
-      setExpenses((prev) => [
-        { id: nextId, ...form, amount: +form.amount },
-        ...prev,
-      ]);
-      setNextId((n) => n + 1);
-    }
+  // ── Handlers ──
+  function resetForm() {
     setForm({
       date: fmt(today),
       category: "Food & Dining",
@@ -308,10 +213,34 @@ export default function FinanceApp() {
       note: "",
     });
     setShowForm(false);
+    setEditItem(null);
   }
 
-  function deleteExpense(id) {
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
+  function saveExpense() {
+    if (!form.amount || !form.date) return;
+    const payload = { ...form, amount: +form.amount };
+
+    if (editItem) {
+      // Optimistic update in Zustand
+      updateExpense({ ...editItem, ...payload });
+      // Persist to server
+      updateMutation.mutate({ id: editItem._id, ...payload });
+    } else {
+      // Optimistic add in Zustand with temp id
+      const tempId = `temp-${Date.now()}`;
+      addExpense({ _id: tempId, ...payload });
+      // Persist to server (invalidation will replace temp on success)
+      addMutation.mutate(payload);
+    }
+
+    resetForm();
+  }
+
+  function handleDelete(id) {
+    // Optimistic remove from Zustand
+    deleteExpense(id);
+    // Persist to server
+    deleteMutation.mutate(id);
   }
 
   function openEdit(item) {
@@ -325,6 +254,7 @@ export default function FinanceApp() {
     setShowForm(true);
   }
 
+  // ── Budget helpers ──
   const viewBudget =
     view === "daily"
       ? MONTHLY_BUDGET / 30
@@ -343,6 +273,26 @@ export default function FinanceApp() {
         ? "text-yellow-400"
         : "text-emerald-400";
 
+  // ── Loading / error states ──
+  if (isLoading)
+    return (
+      <div className="bg-slate-950 min-h-screen flex items-center justify-center">
+        <div className="text-slate-400 text-sm animate-pulse">
+          Loading expenses...
+        </div>
+      </div>
+    );
+
+  if (isError)
+    return (
+      <div className="bg-slate-950 min-h-screen flex items-center justify-center">
+        <div className="text-red-400 text-sm">
+          ⚠️ Failed to load expenses. Check your API connection.
+        </div>
+      </div>
+    );
+
+  // ── Custom Tooltip ──
   const TT = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
     return (
@@ -357,6 +307,12 @@ export default function FinanceApp() {
     );
   };
 
+  const isMutating =
+    addMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending;
+
+  // ── Render ──
   return (
     <div
       className="bg-slate-950 min-h-screen text-slate-200"
@@ -382,6 +338,11 @@ export default function FinanceApp() {
             </div>
             <div className="text-slate-500 text-[10px]">
               ₹25,000/month · SIP ₹8,000 active
+              {isMutating && (
+                <span className="ml-2 text-blue-400 animate-pulse">
+                  · saving...
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -541,10 +502,7 @@ export default function FinanceApp() {
                     {editItem ? "✏️ Edit Expense" : "➕ New Expense"}
                   </h3>
                   <button
-                    onClick={() => {
-                      setShowForm(false);
-                      setEditItem(null);
-                    }}
+                    onClick={resetForm}
                     className="text-slate-500 hover:text-red-400 text-xl leading-none transition-colors"
                   >
                     ✕
@@ -615,15 +573,17 @@ export default function FinanceApp() {
                 <div className="flex gap-2 mt-4">
                   <button
                     onClick={saveExpense}
-                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-blue-900/30"
+                    disabled={isMutating}
+                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-blue-900/30"
                   >
-                    {editItem ? "Update Expense" : "Save Expense"}
+                    {isMutating
+                      ? "Saving..."
+                      : editItem
+                        ? "Update Expense"
+                        : "Save Expense"}
                   </button>
                   <button
-                    onClick={() => {
-                      setShowForm(false);
-                      setEditItem(null);
-                    }}
+                    onClick={resetForm}
                     className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm transition-all"
                   >
                     Cancel
@@ -696,7 +656,7 @@ export default function FinanceApp() {
                         const meta = catMeta(exp.category);
                         return (
                           <div
-                            key={exp.id}
+                            key={exp._id}
                             className={`flex items-center gap-3 px-4 py-3 hover:bg-slate-800/30 transition-all group ${idx < items.length - 1 ? "border-b border-slate-800/40" : ""}`}
                           >
                             <div
@@ -738,8 +698,9 @@ export default function FinanceApp() {
                                   ✏️
                                 </button>
                                 <button
-                                  onClick={() => deleteExpense(exp.id)}
-                                  className="w-7 h-7 bg-slate-800 hover:bg-red-950 rounded-lg flex items-center justify-center text-xs transition-all"
+                                  onClick={() => handleDelete(exp._id)}
+                                  disabled={deleteMutation.isPending}
+                                  className="w-7 h-7 bg-slate-800 hover:bg-red-950 disabled:opacity-50 rounded-lg flex items-center justify-center text-xs transition-all"
                                   title="Delete"
                                 >
                                   🗑
@@ -854,12 +815,10 @@ export default function FinanceApp() {
               </ResponsiveContainer>
               <div className="flex gap-4 justify-end mt-1">
                 <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                  <div className="w-2 h-2 rounded-sm bg-orange-500" />
-                  Food
+                  <div className="w-2 h-2 rounded-sm bg-orange-500" /> Food
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                  <div className="w-2 h-2 rounded-sm bg-blue-500" />
-                  Other
+                  <div className="w-2 h-2 rounded-sm bg-blue-500" /> Other
                 </div>
               </div>
             </div>
@@ -1115,23 +1074,19 @@ export default function FinanceApp() {
                 <span className="text-2xl">🍃</span>
                 <div>
                   <div className="text-sm font-semibold text-slate-300 mb-1.5">
-                    MongoDB Integration — Ready to Wire Up
+                    MongoDB Integration — Wired Up ✅
                   </div>
                   <div className="text-xs text-slate-500 leading-relaxed space-y-1">
                     <p>
-                      Data lives in{" "}
+                      Data is fetched from your Express API via{" "}
                       <code className="text-green-400 bg-slate-800 px-1 rounded">
-                        useState
-                      </code>
-                      . To persist, call your Express API inside{" "}
-                      <code className="text-blue-400 bg-slate-800 px-1 rounded">
-                        saveExpense()
+                        useQuery
                       </code>{" "}
-                      and{" "}
+                      and synced to Zustand. CRUD operations go through{" "}
                       <code className="text-blue-400 bg-slate-800 px-1 rounded">
-                        deleteExpense()
-                      </code>
-                      .
+                        useMutation
+                      </code>{" "}
+                      with optimistic updates.
                     </p>
                     <p className="text-slate-600">
                       Schema:{" "}

@@ -14,4 +14,4 @@ router.post("/", authMiddleware, addExpense);
 router.put("/:id", authMiddleware, updateExpense);
 router.delete("/:id", authMiddleware, deleteExpense);
 
-export default router;
+export default router;    

@@ -9,7 +9,6 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-
         {/* Default route */}
         <Route path="/" element={<Navigate to="/login" />} />
 
@@ -26,7 +25,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
       </Routes>
     </BrowserRouter>
   );

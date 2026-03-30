@@ -11,6 +11,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
+import budgetRoutes from "./routes/budgetRoutes.js";
 
 import logger from "./config/logger.js"
 import requestLogger from "./config/requestLogger.js"; 
@@ -23,6 +24,12 @@ app.use(requestLogger); // ✅ log all requests
 
 app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
+console.log("DEBUG: budgetRoutes is", typeof budgetRoutes);
+app.use("/api/budget", budgetRoutes);
+console.log("DEBUG: Budget routes registered");
+
+// Test route for debugging
+app.get("/api/budget/test", (req, res) => res.json({ message: "Budget routes are loaded" }));
 
 app.get("/", (req, res) => res.send("✅ WealthOs API running"));
 
@@ -30,8 +37,8 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     logger.info("MongoDB connected"); // ✅ replace console.log
-    app.listen(process.env.PORT || 5000, () =>
-      logger.info(`Server running on port ${process.env.PORT || 5000}`)
+    app.listen(process.env.PORT || 5173, () =>
+      logger.info(`Server running on port ${process.env.PORT || 5173}`)
     );
   })
   .catch((err) => logger.error(`MongoDB connection error: ${err.message}`)); 

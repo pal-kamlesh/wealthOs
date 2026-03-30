@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { login } from "../../lib/api";
+import { setToken } from "../../utils/auth";
 import useExpenseStore from "../../store/useExpenceStore";
 
 export default function Login() {
@@ -16,7 +17,11 @@ export default function Login() {
   const loginMutation = useMutation({
     mutationFn: login, // calls your api utility
     onSuccess: (data) => {
-      setUser(data.result); // store user in Zustand
+      // Save token to localStorage for authenticated requests
+      if (data.token) {
+        setToken(data.token);
+      }
+      setUser(data.user); // store user in Zustand
       navigate("/dashboard");
     },
     onError: (err) => {

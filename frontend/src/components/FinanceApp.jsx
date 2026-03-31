@@ -13,9 +13,11 @@ import TrendChart from "./TrendChart";
 import InsightCards from "./InsightCards";
 import MongoDBNote from "./MongoDBNote";
 import BudgetSettings from "./BudgetSettings";
+import UserProfile from "./UserProfile";
 import { useExpenses, useExpenseForm } from "../hooks/useExpenses.js";
 import { useBudget } from "../hooks/useBudget.js";
 import { SALARY } from "../utils/constants.js";
+import { showToast } from "../store/useToastStore.js";
 import {
   calculateFiltered,
   calculateTotalSpent,
@@ -86,7 +88,7 @@ export default function FinanceApp() {
   // Handle form submission
   const handleSaveExpense = useCallback(async () => {
     if (!form.amount || !form.date) {
-      alert("Please fill in amount and date");
+      showToast.error("Please fill in amount and date");
       return;
     }
 
@@ -100,15 +102,17 @@ export default function FinanceApp() {
 
       if (editItem) {
         await updateExpense(editItem.id || editItem._id, expenseData);
+        showToast.success("Expense updated successfully!");
       } else {
         await addExpense(expenseData);
+        showToast.success("Expense added successfully!");
       }
 
       reset();
       setShowForm(false);
       setEditItem(null);
     } catch (err) {
-      alert("Error saving expense: " + err.message);
+      showToast.error("Error saving expense: " + err.message);
     }
   }, [form, editItem, addExpense, updateExpense, reset]);
 
@@ -128,8 +132,9 @@ export default function FinanceApp() {
       if (confirm("Delete this expense?")) {
         try {
           await deleteExpense(id);
+          showToast.success("Expense deleted successfully!");
         } catch (err) {
-          alert("Error deleting expense: " + err.message);
+          showToast.error("Error deleting expense: " + err.message);
         }
       }
     },
@@ -277,6 +282,9 @@ export default function FinanceApp() {
             <MongoDBNote />
           </div>
         )}
+
+        {/* ══ PROFILE TAB ══ */}
+        {tab === "profile" && <UserProfile />}
 
         {/* ══ SETTINGS TAB ══ */}
         {tab === "settings" && (

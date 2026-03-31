@@ -6,19 +6,20 @@ dotenv.config();
 
 export const signup = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { username, email, password } = req.body;
 
-    if (!name || !email || !password)
+    if (!username || !email || !password)
       return res.status(400).json({ message: "All fields are required" });
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
     if (existingUser)
       return res.status(400).json({ message: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // ✅ username: name  (maps form "name" field to model "username" field)
-    const user = new User({ username: name, email, password: hashedPassword });
+    const user = new User({ username, email, password: hashedPassword });
     await user.save();
 
     res.status(201).json({ message: "Signup successful" });
@@ -30,8 +31,6 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    console.log("Login attempt:", { email, password }); // ✅ log login attempts
 
     if (!email || !password)
       return res.status(400).json({ message: "All fields are required" });
@@ -50,8 +49,12 @@ export const login = async (req, res) => {
 
     res.json({
       token,
-      // ✅ username instead of name to match User.js model
-      user: { id: user._id, name: user.username, email: user.email },
+      user: { 
+        id: user._id, 
+        username: user.username,
+        email: user.email,
+        income: user.income,
+      },
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

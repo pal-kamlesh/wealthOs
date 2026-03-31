@@ -56,3 +56,8 @@ export const updateCategoryBudget = (categoryLabel, amount) =>
     method: "PUT",
     body: JSON.stringify({ categoryLabel, amount }),
   });
+
+// User Profile API
+export const getUserProfile = () => api("/api/users/profile");
+export const updateUserProfile = (body) =>
+  api("/api/users/profile", { method: "PUT", body: JSON.stringify(body) });

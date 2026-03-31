@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useBudget } from "../hooks/useBudget.js";
 import { CATEGORIES } from "../utils/constants.js";
 import { fmtFull } from "../utils/formatters.js";
+import { showToast } from "../store/useToastStore.js";
 
 export default function BudgetSettings() {
   const { budget, loading, error, updateCategoryBudget } = useBudget();
@@ -17,7 +18,7 @@ export default function BudgetSettings() {
 
   const handleSaveCategory = async () => {
     if (!tempAmount || isNaN(tempAmount)) {
-      alert("Please enter a valid amount");
+      showToast.error("Please enter a valid amount");
       return;
     }
 
@@ -26,8 +27,9 @@ export default function BudgetSettings() {
       await updateCategoryBudget(editingCategory, parseFloat(tempAmount));
       setEditingCategory(null);
       setTempAmount("");
+      showToast.success(`Budget updated for ${editingCategory}!`);
     } catch (err) {
-      alert("Error updating budget: " + err.message);
+      showToast.error("Error updating budget: " + err.message);
     } finally {
       setSaving(false);
     }

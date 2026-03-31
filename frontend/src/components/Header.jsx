@@ -1,16 +1,23 @@
 import { TABS } from "../utils/constants.js";
 import { useNavigate } from "react-router-dom";
 import { clearAuth } from "../utils/auth.js";
+import { useUserProfile } from "../hooks/useUserProfile.js";
 
 export default function Header({ tab, onTabChange }) {
   const navigate = useNavigate();
+  const { profile, loading } = useUserProfile();
 
   const handleLogout = () => {
-    if (confirm("Logout?")) {
+    if (confirm("Are you sure you want to logout?")) {
       clearAuth();
       navigate("/login");
     }
   };
+
+  const incomeDisplay = profile?.income
+    ? `₹${profile.income.toLocaleString()}/month`
+    : "Loading...";
+  const budgetDisplay = "SIP ₹8,000 active";
 
   return (
     <div className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-xl">
@@ -26,7 +33,7 @@ export default function Header({ tab, onTabChange }) {
             WealthOS
           </div>
           <div className="text-slate-500 text-[10px]">
-            ₹25,000/month · SIP ₹8,000 active
+            {loading ? "Loading..." : `${incomeDisplay} · ${budgetDisplay}`}
           </div>
         </div>
       </div>
@@ -35,7 +42,11 @@ export default function Header({ tab, onTabChange }) {
           <button
             key={t.id}
             onClick={() => onTabChange(t.id)}
-            className={`px-4 py-1.5 rounded-lg text-xs transition-all font-mono ${tab === t.id ? "bg-blue-900/70 text-blue-300 font-semibold" : "text-slate-500 hover:text-slate-300"}`}
+            className={`px-4 py-1.5 rounded-lg text-xs transition-all font-mono ${
+              tab === t.id
+                ? "bg-blue-900/70 text-blue-300 font-semibold"
+                : "text-slate-500 hover:text-slate-300"
+            }`}
           >
             {t.label}
           </button>

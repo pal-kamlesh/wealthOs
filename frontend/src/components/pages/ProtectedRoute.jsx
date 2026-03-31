@@ -3,8 +3,10 @@ import { isAuthenticated } from "../../utils/auth.js";
 
 export default function ProtectedRoute({ children }) {
   if (!isAuthenticated()) {
-    return <Navigate to="/login" />;
+    // Redirect to login if not authenticated
+    return <Navigate to="/login" replace />;
   }
 
+  // Render the protected component if authenticated
   return children;
 }

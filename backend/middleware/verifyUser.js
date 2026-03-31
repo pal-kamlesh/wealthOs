@@ -15,7 +15,18 @@ function createToken(user) {
 }
 
 const verifyToken = (req, res, next) => {
-  const token = req.cookies.access_token;
+  // Check for token in Authorization header first (Bearer token)
+  let token = null;
+  
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.slice(7); // Remove "Bearer " prefix
+  } 
+  // Fall back to cookie if no Authorization header
+  else if (req.cookies && req.cookies.access_token) {
+    token = req.cookies.access_token;
+  }
+
   if (!token) {
     return next(errorHandler(401, "No token"));
   }

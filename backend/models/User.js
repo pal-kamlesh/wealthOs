@@ -17,6 +17,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    income: {
+      type: Number,
+      default: 0,
+    },
+    phoneNumber: {
+      type: String,
+      default: null,
+    },
+    bio: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );

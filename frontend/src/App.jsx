@@ -1,13 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
 import FinanceApp from "./components/FinanceApp";
 import Login from "./components/pages/Login";
 import Signup from "./components/pages/Signup";
 import ProtectedRoute from "./components/pages/ProtectedRoute";
+import ToastContainer from "./components/ToastContainer";
 
 function App() {
   return (
     <BrowserRouter>
+      <ToastContainer />
       <Routes>
         {/* Default route */}
         <Route path="/" element={<Navigate to="/login" />} />

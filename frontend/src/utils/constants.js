@@ -18,6 +18,7 @@ export const TABS = [
   { id: "tracker", label: "💳 Tracker" },
   { id: "overview", label: "📊 Overview" },
   { id: "insights", label: "💡 Insights" },
+  { id: "profile", label: "👤 Profile" },
   { id: "settings", label: "⚙️ Settings" },
 ];
 

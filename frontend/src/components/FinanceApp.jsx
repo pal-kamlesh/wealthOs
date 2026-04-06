@@ -16,6 +16,7 @@ import BudgetSettings from "./BudgetSettings";
 import UserProfile from "./UserProfile";
 import { useExpenses, useExpenseForm } from "../hooks/useExpenses.js";
 import { useBudget } from "../hooks/useBudget.js";
+import { useRealtimeTransactions } from "../hooks/useRealtimeTransactions.js";
 import { SALARY } from "../utils/constants.js";
 import { showToast } from "../store/useToastStore.js";
 import {
@@ -40,6 +41,9 @@ export default function FinanceApp() {
     useExpenses();
   const { budget } = useBudget();
   const { form, updateField, reset, setFromExpense } = useExpenseForm();
+
+  // Enable real-time transaction listening
+  useRealtimeTransactions(true);
 
   const today = new Date();
   const windowStart = useMemo(

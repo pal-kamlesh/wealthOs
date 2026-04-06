@@ -61,3 +61,15 @@ export const updateCategoryBudget = (categoryLabel, amount) =>
 export const getUserProfile = () => api("/api/users/profile");
 export const updateUserProfile = (body) =>
   api("/api/users/profile", { method: "PUT", body: JSON.stringify(body) });
+
+// Transaction API (SMS-based)
+export const getTransactions = (limit = 50, skip = 0) =>
+  api(`/api/transactions?limit=${limit}&skip=${skip}`);
+export const sendTransaction = (body) =>
+  api("/api/transactions", { method: "POST", body: JSON.stringify(body) });
+export const batchSendTransactions = (body) =>
+  api("/api/transactions/batch", { method: "POST", body: JSON.stringify(body) });
+export const checkDuplicate = (smsHash) =>
+  api(`/api/transactions/check-duplicate/${smsHash}`);
+export const deleteTransaction = (id) =>
+  api(`/api/transactions/${id}`, { method: "DELETE" });

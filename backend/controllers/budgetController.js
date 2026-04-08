@@ -15,12 +15,38 @@ export const getBudget = async (req, res) => {
   try {
     let budget = await Budget.findOne({ userId: req.user.id });
     if (!budget) {
-      // Return default budget if not set
-      budget = {
+      // Create and return default budget if not set
+      budget = new Budget({
         userId: req.user.id,
         categories: DEFAULT_CATEGORIES,
-        totalMonthlyBudget: 8000,
-      };
+        totalMonthlyBudget: DEFAULT_CATEGORIES.reduce((sum, cat) => sum + cat.budget, 0),
+      });
+      await budget.save();
+    } else {
+      // Ensure existing budgets have icon and color fields
+      const updatedCategories = budget.categories.map((category) => {
+        const defaultCategory = DEFAULT_CATEGORIES.find((d) => d.label === category.label);
+        return {
+          label: category.label,
+          budget: category.budget,
+          icon: category.icon || defaultCategory?.icon || "📦",
+          color: category.color || defaultCategory?.color || "#94a3b8",
+        };
+      });
+      const recalculatedTotal = updatedCategories.reduce(
+        (sum, category) => sum + category.budget,
+        0
+      );
+      const shouldSave =
+        JSON.stringify(updatedCategories) !== JSON.stringify(budget.categories) ||
+        budget.totalMonthlyBudget !== recalculatedTotal;
+
+      if (shouldSave) {
+        budget.categories = updatedCategories;
+        budget.totalMonthlyBudget = recalculatedTotal;
+        budget.updatedAt = new Date();
+        budget = await budget.save();
+      }
     }
     res.json(budget);
   } catch (err) {
@@ -30,18 +56,22 @@ export const getBudget = async (req, res) => {
 
 export const updateBudget = async (req, res) => {
   try {
-    const { categories, totalMonthlyBudget } = req.body;
+    const { categories } = req.body;
+    const totalFromCategories = categories.reduce(
+      (sum, category) => sum + category.budget,
+      0
+    );
 
     let budget = await Budget.findOne({ userId: req.user.id });
     if (!budget) {
       budget = new Budget({
         userId: req.user.id,
         categories,
-        totalMonthlyBudget,
+        totalMonthlyBudget: totalFromCategories,
       });
     } else {
       budget.categories = categories;
-      budget.totalMonthlyBudget = totalMonthlyBudget;
+      budget.totalMonthlyBudget = totalFromCategories;
       budget.updatedAt = new Date();
     }
 
@@ -69,6 +99,10 @@ export const updateCategoryBudget = async (req, res) => {
     }
 
     budget.categories[categoryIndex].budget = amount;
+    budget.totalMonthlyBudget = budget.categories.reduce(
+      (sum, category) => sum + category.budget,
+      0
+    );
     budget.updatedAt = new Date();
     const saved = await budget.save();
     res.json(saved);

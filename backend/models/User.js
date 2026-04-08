@@ -29,6 +29,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    sip: {
+      type: Number,
+      default: 0,
+    },
+    emergencyFund: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

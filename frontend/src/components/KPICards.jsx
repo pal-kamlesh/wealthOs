@@ -1,23 +1,33 @@
 import { fmtFull } from "../utils/formatters.js";
 
-export default function KPICards({ totalSpent, viewBudget, view, filtered }) {
-  const remaining = Math.max(0, Math.round(viewBudget - totalSpent));
-  const isOverBudget = totalSpent > viewBudget;
+export default function KPICards({ totalSpent, viewBudget, view, filtered, filterCat, budgetPercentageOfSalary = 0, isBudgetOverLimit = false }) {
+  // Handle potential undefined values
+  const safeTotalSpent = totalSpent || 0;
+  const safeViewBudget = viewBudget || 0;
+  const safeFiltered = filtered || [];
+  const safeBudgetPercentageOfSalary = budgetPercentageOfSalary || 0;
+  const safeIsBudgetOverLimit = isBudgetOverLimit || false;
+  const remaining = Math.max(0, Math.round(safeViewBudget - safeTotalSpent));
+  const isOverBudget = safeTotalSpent > safeViewBudget;
+  const budgetLabel =
+    filterCat === "All"
+      ? `${view} limit`
+      : `${filterCat} ${view} limit`;
 
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
       {[
         {
           label: "Spent",
-          val: fmtFull(totalSpent),
+          val: fmtFull(safeTotalSpent),
           sub: `${view} total`,
           color: "text-orange-400",
         },
         {
           label: "Budget",
-          val: fmtFull(Math.round(viewBudget)),
-          sub: `${view} limit`,
-          color: "text-slate-300",
+          val: fmtFull(Math.round(safeViewBudget)),
+          sub: budgetLabel,
+          color: safeIsBudgetOverLimit ? "text-red-400" : "text-slate-300",
         },
         {
           label: "Remaining",
@@ -27,9 +37,15 @@ export default function KPICards({ totalSpent, viewBudget, view, filtered }) {
         },
         {
           label: "Transactions",
-          val: filtered.length,
+          val: safeFiltered.length,
           sub: `${view} entries`,
           color: "text-blue-400",
+        },
+        {
+          label: "Salary Usage",
+          val: `${safeBudgetPercentageOfSalary}%`,
+          sub: "of monthly salary",
+          color: safeIsBudgetOverLimit ? "text-red-400" : "text-emerald-400",
         },
       ].map((k, i) => (
         <div

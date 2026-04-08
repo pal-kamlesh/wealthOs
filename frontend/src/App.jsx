@@ -5,20 +5,23 @@ import Login from "./components/pages/Login";
 import Signup from "./components/pages/Signup";
 import ProtectedRoute from "./components/pages/ProtectedRoute";
 import ToastContainer from "./components/ToastContainer";
-import { getToken } from "./utils/auth";
+import { getToken, isAuthenticated } from "./utils/auth";
 import { initializeSocket, closeSocket } from "./services/socketService";
+import { useProfileStore } from "./store/useProfileStore";
 
 function App() {
   useEffect(() => {
-    // Initialize Socket.IO when user is logged in
+    // Initialize Socket.IO and fetch profile when user is logged in
     const token = getToken();
     if (token) {
       initializeSocket();
+      useProfileStore.getState().fetchProfile();
     }
 
     // Cleanup on unmount
     return () => {
       closeSocket();
+      useProfileStore.getState().clearProfile();
     };
   }, []);
 
@@ -27,7 +30,12 @@ function App() {
       <ToastContainer />
       <Routes>
         {/* Default route */}
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route
+          path="/"
+          element={
+            isAuthenticated() ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
+          }
+        />
 
         {/* Auth pages */}
         <Route path="/login" element={<Login />} />

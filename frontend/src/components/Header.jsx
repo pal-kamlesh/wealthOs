@@ -1,11 +1,11 @@
 import { TABS } from "../utils/constants.js";
 import { useNavigate } from "react-router-dom";
 import { clearAuth } from "../utils/auth.js";
-import { useUserProfile } from "../hooks/useUserProfile.js";
+import { useProfileStore } from "../store/useProfileStore.js";
 
 export default function Header({ tab, onTabChange }) {
   const navigate = useNavigate();
-  const { profile, loading } = useUserProfile();
+  const { profile, loading } = useProfileStore();
 
   const handleLogout = () => {
     if (confirm("Are you sure you want to logout?")) {
@@ -14,10 +14,17 @@ export default function Header({ tab, onTabChange }) {
     }
   };
 
-  const incomeDisplay = profile?.income
-    ? `₹${profile.income.toLocaleString()}/month`
+  const income = profile?.income || 0;
+  const sip = profile?.sip || 0;
+  const emergencyFund = profile?.emergencyFund || 0;
+  const availableBudget = Math.max(0, income - sip - emergencyFund);
+
+  const incomeDisplay = income
+    ? `₹${income.toLocaleString()}/month`
     : "Loading...";
-  const budgetDisplay = "SIP ₹8,000 active";
+  const budgetDisplay = availableBudget
+    ? `₹${availableBudget.toLocaleString()} available`
+    : "₹0 available";
 
   return (
     <div className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-xl">

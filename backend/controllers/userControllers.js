@@ -31,7 +31,7 @@ const getUserProfile = async (req, res, next) => {
 const updateUserProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { username, email, income, phoneNumber, bio } = req.body;
+    const { username, email, income, phoneNumber, bio, sip, emergencyFund } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -52,6 +52,8 @@ const updateUserProfile = async (req, res, next) => {
     if (income !== undefined) user.income = income;
     if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
     if (bio !== undefined) user.bio = bio;
+    if (sip !== undefined) user.sip = sip;
+    if (emergencyFund !== undefined) user.emergencyFund = emergencyFund;
 
     await user.save();
     const { password, ...profileData } = user._doc;

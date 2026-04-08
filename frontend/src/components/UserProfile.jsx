@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { useUserProfile } from "../hooks/useUserProfile.js";
+import { useProfileStore } from "../store/useProfileStore.js";
 import { showToast } from "../store/useToastStore.js";
 
 export default function UserProfile() {
-  const { profile, loading, error, updateProfile } = useUserProfile();
+  const { profile, loading, error, updateProfile } = useProfileStore();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -11,6 +11,8 @@ export default function UserProfile() {
     income: 0,
     phoneNumber: "",
     bio: "",
+    sip: 0,
+    emergencyFund: 0,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -23,6 +25,8 @@ export default function UserProfile() {
         income: profile.income || 0,
         phoneNumber: profile.phoneNumber || "",
         bio: profile.bio || "",
+        sip: profile.sip || 0,
+        emergencyFund: profile.emergencyFund || 0,
       });
     }
   }, [profile]);
@@ -31,7 +35,7 @@ export default function UserProfile() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "income" ? parseFloat(value) || 0 : value,
+      [name]: ["income", "sip", "emergencyFund"].includes(name) ? parseFloat(value) || 0 : value,
     }));
   };
 
@@ -105,6 +109,22 @@ export default function UserProfile() {
                       <p className="text-slate-400 text-sm mb-1">Phone Number</p>
                       <p className="text-white text-lg">
                         {profile?.phoneNumber || "Not set"}
+                      </p>
+                    </div>
+
+                    {/* SIP Card */}
+                    <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
+                      <p className="text-slate-400 text-sm mb-1">Monthly SIP</p>
+                      <p className="text-white text-2xl font-bold">
+                        ₹{profile?.sip?.toLocaleString() || "0"}
+                      </p>
+                    </div>
+
+                    {/* Emergency Fund Card */}
+                    <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
+                      <p className="text-slate-400 text-sm mb-1">Emergency Fund</p>
+                      <p className="text-white text-2xl font-bold">
+                        ₹{profile?.emergencyFund?.toLocaleString() || "0"}
                       </p>
                     </div>
                   </div>
@@ -197,6 +217,38 @@ export default function UserProfile() {
                       onChange={handleInputChange}
                       className="w-full bg-slate-700 text-white rounded-lg px-4 py-2 border border-slate-600 focus:border-blue-500 focus:outline-none"
                       placeholder="Your phone number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 text-sm font-medium mb-2">
+                      Monthly SIP (₹)
+                    </label>
+                    <input
+                      type="number"
+                      name="sip"
+                      value={formData.sip}
+                      onChange={handleInputChange}
+                      className="w-full bg-slate-700 text-white rounded-lg px-4 py-2 border border-slate-600 focus:border-blue-500 focus:outline-none"
+                      placeholder="0"
+                      min="0"
+                      step="100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 text-sm font-medium mb-2">
+                      Emergency Fund (₹)
+                    </label>
+                    <input
+                      type="number"
+                      name="emergencyFund"
+                      value={formData.emergencyFund}
+                      onChange={handleInputChange}
+                      className="w-full bg-slate-700 text-white rounded-lg px-4 py-2 border border-slate-600 focus:border-blue-500 focus:outline-none"
+                      placeholder="0"
+                      min="0"
+                      step="100"
                     />
                   </div>
 

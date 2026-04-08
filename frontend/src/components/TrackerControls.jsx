@@ -25,21 +25,22 @@ export default function TrackerControls({
       </div>
 
       <div className="flex gap-1.5 flex-wrap">
-        {["All", ...categories.map((c) => c.label)]
+        {["All", ...categories.map((c) => c.label).filter(Boolean)]
           .slice(0, 7)
-          .map((cat) => (
-            <button
-              key={cat}
-              onClick={() => onFilterChange(cat)}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all border ${filterCat === cat ? "bg-blue-900/60 border-blue-600 text-blue-300" : "border-slate-800 text-slate-500 hover:border-slate-600 hover:text-slate-300"}`}
-            >
-              {cat === "All"
-                ? "All"
-                : categories.find((c) => c.label === cat)?.icon +
-                  " " +
-                  cat.split(" ")[0]}
-            </button>
-          ))}
+          .map((cat) => {
+            const category = categories.find((c) => c.label === cat);
+            const icon = category?.icon || "📦";
+            const labelText = typeof cat === "string" ? cat.split(" ")[0] : "Category";
+            return (
+              <button
+                key={cat}
+                onClick={() => onFilterChange(cat)}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all border ${filterCat === cat ? "bg-blue-900/60 border-blue-600 text-blue-300" : "border-slate-800 text-slate-500 hover:border-slate-600 hover:text-slate-300"}`}
+              >
+                {cat === "All" ? "All" : `${icon} ${labelText}`}
+              </button>
+            );
+          })}
       </div>
 
       <button

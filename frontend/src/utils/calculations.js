@@ -1,6 +1,6 @@
 // ─── Calculation Utilities ────────────────────────────────────────────────────
 
-import { fmt, daysAgo, startOf, catMeta } from "./formatters.js";
+import { daysAgo, catMeta } from "./formatters.js";
 import { CATEGORIES, MONTHLY_BUDGET } from "./constants.js";
 
 export const calculateFiltered = (expenses, windowStart, filterCat) => {
@@ -71,7 +71,11 @@ export const getViewBudget = (view, monthlyBudget) => {
 };
 
 export const calculateBudgetPercentage = (totalSpent, viewBudget) => {
-  return Math.min((totalSpent / viewBudget) * 100, 100);
+  const percentage = viewBudget > 0 ? (totalSpent / viewBudget) * 100 : 0;
+  if (!Number.isFinite(percentage) || percentage < 0) {
+    return 0;
+  }
+  return Math.min(percentage, 100);
 };
 
 export const getBudgetColor = (percentage) => {
